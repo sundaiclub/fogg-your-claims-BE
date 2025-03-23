@@ -4,3 +4,4 @@ psycopg2-binary
 uvicorn
 requests
 ai21
+python-multipart
