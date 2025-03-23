@@ -1,7 +1,11 @@
 from ai21 import AI21Client
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
-api_key = "oThB3VqcCJnJ7VIRPeUm334FTCcL1exE"
+api_key = os.getenv("AI21_API_KEY")
 client = AI21Client(api_key=api_key)
 
 files_ids = client.library.files.list()
@@ -17,7 +21,7 @@ file_id = client.library.files.create(
   path="/",
   labels=["health-insurance-policy.pdf"],
 )
-
+print(file_id)
 file_metadata = client.library.files.get(file_id)
 
 # Wait for file to be processed
