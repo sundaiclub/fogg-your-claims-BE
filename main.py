@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, Field
 import requests
@@ -17,6 +18,15 @@ load_dotenv()
 
 app = FastAPI()
 
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 @app.get("/", response_class=PlainTextResponse)
 def read_root():
