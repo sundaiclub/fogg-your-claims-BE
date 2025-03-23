@@ -7,12 +7,6 @@ import os
 
 load_dotenv()
 
-http_client.HTTPConnection.debuglevel = 1
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
-requests_log = logging.getLogger("urllib3")
-requests_log.setLevel(logging.DEBUG)
-requests_log.propagate = True
 
 api_key = os.getenv("AI21_API_KEY")
 client = AI21Client(api_key=api_key)
