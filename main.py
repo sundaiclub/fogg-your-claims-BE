@@ -11,6 +11,7 @@ from pydantic import BaseModel
 import uvicorn
 import requests
 from schema import Output, SubmitAppealOutput
+import json
 
 load_dotenv()
 
@@ -35,20 +36,25 @@ async def submit_appeal(
     additional_info: Optional[str] = Form(None),
 ):
     try:
-
         # policy_doc_metadata = None
         # if policy_doc_file_id:
         #     policy_doc_metadata = client.library.files.get(policy_doc_file_id)
+        # print(policy_doc_metadata)
 
-        # dob_parsed = None
-        # if dob:
-        #     try:
-        #         dob_parsed = datetime.strptime(dob, "%Y-%m-%d").date()
-        #     except ValueError:
-        #         return JSONResponse(status_code=400, content={"error": "DOB must be in YYYY-MM-DD format"})
+        user_info = f"Name: {name}\n"
+        if dob:
+            user_info += f"Date of Birth: {dob}\n"
+        tools = []
+        tool_resources = {}
+
+        if policy_doc_file_id:
+            tools = [{"type": "file_search"}]
+            tool_resources = {"file_search": {"file_ids": [policy_doc_file_id]}}
+        if additional_info:
+            user_info += f"Additional Information: {additional_info}\n"
 
         run_result = client.beta.maestro.runs.create_and_poll(
-            input="""
+            input=f"""
 Objective:
 You are an AI assistant tasked with handling a health insurance dispute. Given a case description, you must analyze the situation and decide on the best course of action:
 
@@ -61,42 +67,43 @@ Settle with the provider – If appealing is not viable, and negotiation is the 
 Once a decision is made, you must generate a structured output in JSON format following the provided schema.
 
 Schema for Output Formatting:
-{
-  "$defs": {
-    "Decision": {
+{{
+  "$defs": {{
+    "Decision": {{
       "enum": ["appeal", "code_for_change", "settlement"],
       "title": "Decision",
       "type": "string"
-    }
-  },
-  "properties": {
-    "decision": {
+    }}
+  }},
+  "properties": {{
+    "decision": {{
       "$ref": "#/$defs/Decision"
-    },
-    "action_steps": {
-      "items": {
+    }},
+    "action_steps": {{
+      "items": {{
         "type": "string"
-      },
+      }},
       "title": "Action Steps",
       "type": "array"
-    },
-    "appeal_letter": {
+    }},
+    "appeal_letter": {{
       "anyOf": [
-        {
+        {{
           "type": "string"
-        },
-        {
+        }},
+        {{
           "type": "null"
-        }
+        }}
       ],
       "default": null,
       "title": "Appeal Letter"
-    }
-  },
+    }}
+  }},
   "required": ["decision", "action_steps"],
   "title": "SubmitAppealOutput",
   "type": "object"
-}
+}}
+
 Instructions for AI Response:
 Determine the best course of action (decision)
 
@@ -122,10 +129,14 @@ Keep the tone professional and persuasive.
 
 If not an appeal, set "appeal_letter": null.
 
+User Information:
+{user_info}
+Denial Letter: {denial_letter}
+
 Few-Shot Examples:
 Example 1: Appeal to Health Insurance Provider
 
-{
+{{
   "decision": "appeal",
   "action_steps": [
     "Review the denial letter and identify the insurer's reason for denial.",
@@ -135,10 +146,11 @@ Example 1: Appeal to Health Insurance Provider
     "Seek external assistance if the appeal is denied (e.g., state insurance department)."
   ],
   "appeal_letter": "Dear [Insurance Company],\n\nI am writing to formally appeal the denial of my claim [Claim Number] for [Service/Treatment], provided on [Date of Service] by [Healthcare Provider]. The denial reason stated was '[Denial Reason].'\n\nAccording to my physician, [Doctor Name], this treatment was medically necessary for my condition, as outlined in the attached supporting documentation. Additionally, per Section [Policy Section] of my insurance policy, this service should be covered.\n\nI kindly request a reconsideration of this decision based on the provided evidence. Please find enclosed medical records and a physician’s letter supporting my appeal.\n\nThank you for your time and attention to this matter. I look forward to your response.\n\nSincerely,\n[Your Name]\n[Your Contact Information]\n[Your Policy Number]"
-}
+}}
+
 Example 2: Code for Change (Claim Correction)
 
-{
+{{
   "decision": "code_for_change",
   "action_steps": [
     "Contact the provider’s billing department to verify the claim details.",
@@ -147,10 +159,11 @@ Example 2: Code for Change (Claim Correction)
     "Follow up with the insurance provider to confirm claim processing."
   ],
   "appeal_letter": null
-}
+}}
+
 Example 3: Settlement (Negotiation with Provider)
 
-{
+{{
   "decision": "settlement",
   "action_steps": [
     "Confirm that the denial is final and not subject to appeal.",
@@ -159,13 +172,13 @@ Example 3: Settlement (Negotiation with Provider)
     "Review third-party medical bill negotiation options."
   ],
   "appeal_letter": null
-}
-            """,
-            tools=[{"type": "file_search"}],
+}}
+""",
+            tools=tools,
+            tool_resources=tool_resources if tool_resources else None,
         )
 
         run_result_json = run_result.model_dump()
-
         output = SubmitAppealOutput.model_validate_json(run_result_json["result"])
 
         return {
