@@ -24,12 +24,11 @@ client = AI21Client(api_key=api_key)
 async def submit_appeal(
     name: str = Form(...),
     dob: Optional[str] = Form(None),
-    denial_letter_file_id: str = Form(...),
+    denial_letter: str = Form(...),
     policy_doc_file_id: Optional[str] = Form(None),
     additional_info: Optional[str] = Form(None),
 ):
     try:
-        denial_letter_metadata = client.library.files.get(denial_letter_file_id)
 
         policy_doc_metadata = None
         if policy_doc_file_id:
@@ -48,8 +47,7 @@ async def submit_appeal(
             "data": {
                 "name": name,
                 "dob": dob,
-                "denial_letter_file_id": denial_letter_file_id,
-                "denial_letter_filename": denial_letter_metadata,
+                "denial_letter": denial_letter,
                 "policy_doc_file_id": policy_doc_file_id,
                 "policy_doc_filename": policy_doc_metadata.filename if policy_doc_metadata else None,
                 "additional_info": additional_info,
