@@ -1,22 +1,31 @@
-from enum import Enum
-from fastapi import FastAPI, Form
-from fastapi.responses import PlainTextResponse, JSONResponse
-from ai21 import AI21Client
-from typing import Optional
-from datetime import datetime
-from ai21 import AI21Client
-from dotenv import load_dotenv
 import os
-from pydantic import BaseModel
-import uvicorn
+from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
 import requests
-from schema import Output, SubmitAppealOutput
+import uvicorn
+from ai21 import AI21Client
+from ai21.models.chat import ChatMessage
+from ai21.models.responses.conversational_rag_response import ConversationalRagResponse
+from dotenv import load_dotenv
+from fastapi import FastAPI, Form
+from fastapi.responses import JSONResponse, PlainTextResponse
+
+from schema import Output, SubmitAppealOutput, AskIn, AskOut
 import json
 
 load_dotenv()
 
 app = FastAPI()
 
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 @app.get("/", response_class=PlainTextResponse)
 def read_root():
@@ -125,6 +134,10 @@ Clearly state the claim details and reason for appeal.
 
 Reference supporting medical documentation or policy details.
 
+In the appeal letter, use the name of the insurance company and the policy number. DO NOT USE ANY PLACEHOLDERS.
+
+In any case, DO NOT USE ANYTHING FROM EXAMPLES.
+
 Keep the tone professional and persuasive.
 
 If not an appeal, set "appeal_letter": null.
@@ -134,6 +147,7 @@ User Information:
 Denial Letter: {denial_letter}
 
 Few-Shot Examples:
+
 Example 1: Appeal to Health Insurance Provider
 
 {{
@@ -200,7 +214,9 @@ Example 3: Settlement (Negotiation with Provider)
 
 @app.get("/get_steps")
 async def get_steps(run_results_id: str):
-    graph_url = f"https://api.ai21.com/studio/v1/execution/{run_results_id}/graph?filtered=true"
+    graph_url = (
+        f"https://api.ai21.com/studio/v1/execution/{run_results_id}/graph?filtered=true"
+    )
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.get(graph_url, headers=headers)
 
@@ -208,7 +224,40 @@ async def get_steps(run_results_id: str):
         graph_data = response.json()
         return graph_data
     else:
-        return JSONResponse(status_code=400, content={"error": "run_results_id not found"})
+        return JSONResponse(
+            status_code=400, content={"error": "run_results_id not found"}
+        )
+
+
+history = []
+
+
+@app.post("/ask", response_model=AskOut)
+async def ask(ask_in: AskIn):
+    run_result: ConversationalRagResponse = client.beta.conversational_rag.create(
+        messages=history + [ChatMessage(role="user", content=ask_in.question)],
+        file_ids=ask_in.file_ids,
+        max_segments=15,
+        retrieval_strategy="segments",
+        retrieval_similarity_threshold=0,
+        max_neighbors=1,
+        response_language="english",
+    )
+    history.append(
+        ChatMessage(role="assistant", content=run_result.choices[0].message.content)
+    )
+    return AskOut(
+        message="Question answered successfully",
+        data={"question": ask_in.question, "file_ids": ask_in.file_ids},
+        result=run_result,
+    )
+
+
+@app.delete("/clear_history")
+async def clear_history():
+    global history
+    history = []
+    return {"message": "History cleared"}
 
 
 if __name__ == "__main__":
