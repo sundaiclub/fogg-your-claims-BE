@@ -1,8 +1,6 @@
 import os
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
-
-from pydantic import BaseModel, Field
 import requests
 import uvicorn
 from ai21 import AI21Client
@@ -12,7 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Form
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from schema import Output, SubmitAppealOutput
+from schema import Output, SubmitAppealOutput, AskIn, AskOut
 
 load_dotenv()
 
@@ -218,17 +216,6 @@ async def get_steps(run_results_id: str):
 
 
 history = []
-
-
-class AskIn(BaseModel):
-    question: str
-    file_ids: list[str] = Field(default_factory=list)
-
-
-class AskOut(BaseModel):
-    message: str
-    data: dict
-    result: ConversationalRagResponse
 
 
 @app.post("/ask", response_model=AskOut)
