@@ -1,5 +1,14 @@
 from ai21 import AI21Client
+import logging
+import http.client as http_client
+import requests
 
+http_client.HTTPConnection.debuglevel = 1
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
+requests_log = logging.getLogger("urllib3")
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
 
 api_key = "oThB3VqcCJnJ7VIRPeUm334FTCcL1exE"
 client = AI21Client(api_key=api_key)
@@ -33,3 +42,18 @@ run_result = client.beta.maestro.runs.create_and_poll(
 )
 
 print(run_result.result)
+
+run_results_id = run_result.id
+
+# Now, use the run_results_id to fetch the execution graph steps
+graph_url = f"https://api.ai21.com/studio/v1/execution/{run_results_id}/graph?filtered=true"
+headers = {"Authorization": f"Bearer {api_key}"}
+response = requests.get(graph_url, headers=headers)
+
+if response.status_code == 200:
+    graph_data = response.json()
+    print("Execution Graph Steps:")
+    print(graph_data)
+else:
+    print("Failed to get execution graph. Status code:", response.status_code)
+
