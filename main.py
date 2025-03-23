@@ -31,9 +31,9 @@ async def submit_appeal(
 ):
     try:
 
-        policy_doc_metadata = None
-        if policy_doc_file_id:
-            policy_doc_metadata = client.library.files.get(policy_doc_file_id)
+        # policy_doc_metadata = None
+        # if policy_doc_file_id:
+        #     policy_doc_metadata = client.library.files.get(policy_doc_file_id)
 
         # dob_parsed = None
         # if dob:
@@ -50,7 +50,6 @@ async def submit_appeal(
                 "dob": dob,
                 "denial_letter": denial_letter,
                 "policy_doc_file_id": policy_doc_file_id,
-                "policy_doc_filename": policy_doc_metadata.filename if policy_doc_metadata else None,
                 "additional_info": additional_info,
             }
         }
