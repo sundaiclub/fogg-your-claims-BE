@@ -118,6 +118,9 @@ Clearly state the claim details and reason for appeal.
 
 Reference supporting medical documentation or policy details.
 
+In the appeal letter, use the name of the insurance company and the policy number. DO NOT USE ANY PLACEHOLDERS.
+
+
 Keep the tone professional and persuasive.
 
 If not an appeal, set "appeal_letter": null.
