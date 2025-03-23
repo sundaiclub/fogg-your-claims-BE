@@ -10,7 +10,7 @@ import os
 from pydantic import BaseModel
 import uvicorn
 import requests
-from schema import SubmitAppealOutput
+from schema import Output, SubmitAppealOutput
 
 load_dotenv()
 
@@ -26,7 +26,7 @@ api_key = os.getenv("AI21_API_KEY")
 client = AI21Client(api_key=api_key)
 
 
-@app.post("/submit-appeal")
+@app.post("/submit-appeal", response_model=Output)
 async def submit_appeal(
     name: str = Form(...),
     dob: Optional[str] = Form(None),

@@ -16,6 +16,12 @@ class SubmitAppealOutput(BaseModel):
     appeal_letter: Optional[str] = None
 
 
+class Output(BaseModel):
+    message: str
+    data: dict
+    result: SubmitAppealOutput
+
+
 if __name__ == "__main__":
     print(
         SubmitAppealOutput(
