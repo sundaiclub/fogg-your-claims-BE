@@ -7,6 +7,7 @@ from ai21 import AI21Client
 from dotenv import load_dotenv
 import os
 import uvicorn
+import requests
 
 load_dotenv()
 
@@ -56,6 +57,19 @@ async def submit_appeal(
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/get_steps")
+async def get_steps(run_results_id: str):
+    graph_url = f"https://api.ai21.com/studio/v1/execution/{run_results_id}/graph?filtered=true"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    response = requests.get(graph_url, headers=headers)
+
+    if response.status_code == 200:
+        graph_data = response.json()
+        return graph_data
+    else:
+        return JSONResponse(status_code=400, content={"error": "run_results_id not found"})
 
 
 if __name__ == "__main__":
