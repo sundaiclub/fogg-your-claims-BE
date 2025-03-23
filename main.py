@@ -35,19 +35,19 @@ async def submit_appeal(
         if policy_doc_file_id:
             policy_doc_metadata = client.library.files.get(policy_doc_file_id)
 
-        dob_parsed = None
-        if dob:
-            try:
-                dob_parsed = datetime.strptime(dob, "%Y-%m-%d").date()
-            except ValueError:
-                return JSONResponse(status_code=400, content={"error": "DOB must be in YYYY-MM-DD format"})
+        # dob_parsed = None
+        # if dob:
+        #     try:
+        #         dob_parsed = datetime.strptime(dob, "%Y-%m-%d").date()
+        #     except ValueError:
+        #         return JSONResponse(status_code=400, content={"error": "DOB must be in YYYY-MM-DD format"})
 
 
         return {
             "message": "Appeal submission received successfully",
             "data": {
                 "name": name,
-                "dob": dob_parsed,
+                "dob": dob,
                 "denial_letter_file_id": denial_letter_file_id,
                 "denial_letter_filename": denial_letter_metadata,
                 "policy_doc_file_id": policy_doc_file_id,
