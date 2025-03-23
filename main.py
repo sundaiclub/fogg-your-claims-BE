@@ -176,8 +176,9 @@ Example 3: Settlement (Negotiation with Provider)
                 "denial_letter": denial_letter,
                 "policy_doc_file_id": policy_doc_file_id,
                 "additional_info": additional_info,
+                "run_result_id": run_result.id
             },
-            "result": output.model_dump(),
+            "result": output.model_dump()
         }
 
     except Exception as e:
