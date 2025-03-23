@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
+from ai21 import AI21Client
 
 app = FastAPI()
+
+
 
 @app.get("/", response_class=PlainTextResponse)
 def read_root():

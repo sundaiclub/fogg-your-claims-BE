@@ -3,3 +3,4 @@ python-dotenv
 psycopg2-binary
 uvicorn
 requests
+ai21
